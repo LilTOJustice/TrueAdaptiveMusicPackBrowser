@@ -300,16 +300,13 @@ class PackBrowserListWidget(
             hovered: Boolean,
             tickDelta: Float
         ) {
-            drawScrollableText(
-                context,
-                client.textRenderer,
+            context.textConsumer.marqueedText(
                 Text.literal(musicPack.name),
                 x + 3,
                 x + 3,
-                y + 3,
                 rowRight - 3,
+                y + 3,
                 y + client.textRenderer.fontHeight + 3,
-                Colors.WHITE
             )
             downloadButton.x = x + width - downloadButton.width - 5
             downloadButton.y = y + height - downloadButton.height - 5
@@ -342,16 +339,13 @@ class PackBrowserListWidget(
                 )
             }
 
-            drawScrollableText(
-                context,
-                client.textRenderer,
+            context.textConsumer.marqueedText(
                 versionText,
                 x + 3,
                 x + 3,
-                y + 17,
                 downloadButton.x - 3,
-                y + height,
-                Colors.GRAY
+                y + 17,
+                y + height
             )
         }
 
