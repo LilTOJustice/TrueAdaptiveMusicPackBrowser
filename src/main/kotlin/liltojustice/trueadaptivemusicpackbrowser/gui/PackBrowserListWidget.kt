@@ -107,7 +107,7 @@ class PackBrowserListWidget(
     override fun getEntryAtPosition(x: Double, y: Double): Entry? {
         val j = rowLeft
         val k = rowRight
-        val m = MathHelper.floor(y - this.y.toDouble()) - this.headerHeight + this.scrollAmount.toInt() - 4
+        val m = MathHelper.floor(y - this.y.toDouble()) - this.headerHeight + this.scrollY.toInt() - 4
         val n = m / this.itemHeight
         return this.children().takeIf {
             x >= j.toDouble() && x <= k.toDouble() && m >= 0 && n < this.entryCount
@@ -244,7 +244,7 @@ class PackBrowserListWidget(
             ImageProcessor.getNativeImage(imagePath)?.let { image ->
                 client.textureManager.registerTexture(
                     identifier,
-                    NativeImageBackedTexture(image)
+                    NativeImageBackedTexture(identifier::toString, image)
                 )
             } ?: return false
             loadedPackImages.add(identifier)
