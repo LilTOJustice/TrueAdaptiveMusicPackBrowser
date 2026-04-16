@@ -4,7 +4,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import liltojustice.trueadaptivemusic.Constants
 import liltojustice.trueadaptivemusic.client.gui.widget.utility.makeDoneButton
-import liltojustice.trueadaptivemusicpackbrowser.pack.BrowsableMusicPack
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.gui.DrawContext
@@ -13,7 +12,6 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.TextWidget
 import net.minecraft.text.MutableText
-import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Colors
 import net.minecraft.util.Util
@@ -27,7 +25,7 @@ class PackBrowserScreen(private val parent: Screen): Screen(
     private lateinit var refreshButton: ButtonWidget
     private lateinit var discordButton: ButtonWidget
     private lateinit var lastRefreshedWidget: TextWidget
-    private var selectedPack: BrowsableMusicPack? = null
+    private var selectedPack: liltojustice.trueadaptivemusic.client.music.pack.browsable.BrowsableMusicPack? = null
 
     override fun init() {
         openMusicPacksButton = ButtonWidget.Builder(OPEN_MUSIC_PACKS_TEXT) {
@@ -38,26 +36,18 @@ class PackBrowserScreen(private val parent: Screen): Screen(
         openMusicPacksButton.y = 1
 
         packListWidget = PackBrowserListWidget(
-            client!!,
-            this.width,
-            this.height - 96,
-            48,
-            this.height - 64,
-            36
-        ) { musicPack -> selectedPack = musicPack }
+            client!!, this.width, this.height - 96, 48, 36)
+        { musicPack -> selectedPack = musicPack }
 
         doneButton = makeDoneButton(textRenderer, width, height) { client?.setScreen(parent) }
 
-        refreshButton = ButtonWidget.builder(REFRESH_TEXT) { _: ButtonWidget? ->
-            runBlocking { coroutineScope { reload() } }
-        }.build()
+        refreshButton = ButtonWidget.builder(REFRESH_TEXT) { _: ButtonWidget? -> runBlocking { coroutineScope { reload() } } }.build()
         refreshButton.x = 1
         refreshButton.y = 1
         refreshButton.width = textRenderer.getWidth(REFRESH_TEXT) + 10
 
         lastRefreshedWidget = TextWidget(Text.empty(), textRenderer)
         lastRefreshedWidget.y = refreshButton.y + refreshButton.height + 3
-        lastRefreshedWidget.alignLeft()
         lastRefreshedWidget.x = 2
 
         discordButton = ButtonWidget.builder(Constants.DISCORD_JOIN_TEXT)
@@ -91,18 +81,16 @@ class PackBrowserScreen(private val parent: Screen): Screen(
     }
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
         lastRefreshedWidget.message = this.packListWidget.refreshTime?.let {
             lastRefreshedWidget.active = true
-            Text.literal("${LAST_REFRESHED_TEXT.string}: $it")
-                .getWithStyle(Style.EMPTY.withColor(Colors.GRAY)).first()
+            Text.literal("${LAST_REFRESHED_TEXT.string}: $it").withColor(Colors.GRAY)
         } ?: run {
             lastRefreshedWidget.active = false
             REFRESHING_TEXT
         }
 
-        this.packListWidget.render(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
+        this.packListWidget.render(context, mouseX, mouseY, delta)
         context?.drawCenteredTextWithShadow(
             this.textRenderer, this.title, this.width / 2, 28, Colors.WHITE)
     }

@@ -41,7 +41,7 @@ class DownloadButtonWidget(
         }
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun renderWidget(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
         active = true
         setTooltip(null)
         when (downloadStatus) {
@@ -71,7 +71,7 @@ class DownloadButtonWidget(
         }
         width = textRenderer.getWidth(message)
 
-        super.render(context, mouseX, mouseY, delta)
+        super.renderWidget(context, mouseX, mouseY, delta)
     }
 
     companion object {
