@@ -9,6 +9,7 @@ import liltojustice.trueadaptivemusic.Logger
 import liltojustice.trueadaptivemusic.Reference
 import liltojustice.trueadaptivemusic.client.gui.ImageProcessor
 import liltojustice.trueadaptivemusic.client.gui.RenderState
+import liltojustice.trueadaptivemusic.client.gui.extensions.drawBorder
 import liltojustice.trueadaptivemusic.client.gui.text.drawMarqueedWrappedText
 import liltojustice.trueadaptivemusicpackbrowser.download.BrowsableMusicPackDownloader
 import liltojustice.trueadaptivemusicpackbrowser.download.DownloadButtonWidget
@@ -16,6 +17,7 @@ import liltojustice.trueadaptivemusicpackbrowser.pack.BrowsableMusicPack
 import liltojustice.trueadaptivemusicpackbrowser.pack.PackManifest
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.RenderPipelines
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen.MENU_BACKGROUND_TEXTURE
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
@@ -27,7 +29,6 @@ import net.minecraft.text.Text
 import net.minecraft.util.Colors
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
-import net.minecraft.util.math.MathHelper
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
@@ -82,36 +83,8 @@ class PackBrowserListWidget(
         }
     }
 
-    override fun getScrollbarX(): Int {
-        return rowRight + 3
-    }
-
     override fun getRowLeft(): Int {
         return x + 3
-    }
-
-    override fun drawSelectionHighlight(
-        context: DrawContext,
-        y: Int,
-        entryWidth: Int,
-        entryHeight: Int,
-        borderColor: Int,
-        fillColor: Int
-    ) {
-        val i = rowLeft
-        val j = rowRight
-        context.fill(i, y - 2, j, y + entryHeight + 2, borderColor)
-        context.fill(i + 1, y - 1, j - 1, y + entryHeight + 1, fillColor)
-    }
-
-    override fun getEntryAtPosition(x: Double, y: Double): Entry? {
-        val j = rowLeft
-        val k = rowRight
-        val m = MathHelper.floor(y - this.y.toDouble()) - this.headerHeight + this.scrollY.toInt() - 4
-        val n = m / this.itemHeight
-        return this.children().takeIf {
-            x >= j.toDouble() && x <= k.toDouble() && m >= 0 && n < this.entryCount
-        }?.get(n)
     }
 
     override fun renderWidget(context: DrawContext?, mouseX: Int, mouseY: Int, deltaTicks: Float) {
@@ -164,7 +137,7 @@ class PackBrowserListWidget(
     private fun renderSelectedPack(context: DrawContext?, musicPack: BrowsableMusicPack) {
         val panelX = scrollbarX + 9
         val panelWidth = width - panelX
-        context?.drawBorder(panelX, y, panelWidth - 1, height, Colors.WHITE)
+        context?.drawBorder(panelX, y, panelWidth - 1, height)
 
         val restrictDescription = musicPack.getImagePath()?.let { imagePath ->
             if (!imagePath.exists()) {
@@ -322,11 +295,6 @@ class PackBrowserListWidget(
 
         override fun render(
             context: DrawContext,
-            index: Int,
-            y: Int,
-            x: Int,
-            entryWidth: Int,
-            entryHeight: Int,
             mouseX: Int,
             mouseY: Int,
             hovered: Boolean,
@@ -338,13 +306,13 @@ class PackBrowserListWidget(
                 Text.literal(musicPack.name),
                 x + 3,
                 x + 3,
-                y,
+                y + 3,
                 rowRight - 3,
                 y + client.textRenderer.fontHeight + 3,
                 Colors.WHITE
             )
-            downloadButton.x = x + entryWidth - downloadButton.width - 5
-            downloadButton.y = y + entryHeight - downloadButton.height - 2
+            downloadButton.x = x + width - downloadButton.width - 5
+            downloadButton.y = y + height - downloadButton.height - 5
             downloadButton.render(context, mouseX, mouseY, tickDelta)
 
             if (downloadButton.downloadStatus == RenderState.Loading) {
@@ -356,7 +324,7 @@ class PackBrowserListWidget(
                 context.drawText(
                     client.textRenderer,
                     progressText,
-                    x + entryWidth - client.textRenderer.getWidth(progressText) - 5,
+                    x + width - client.textRenderer.getWidth(progressText) - 5,
                     downloadButton.y - client.textRenderer.fontHeight,
                     Colors.GRAY,
                     false
@@ -367,7 +335,7 @@ class PackBrowserListWidget(
                 context.drawText(
                     client.textRenderer,
                     sizeText,
-                    x + entryWidth - client.textRenderer.getWidth(sizeText) - 5,
+                    x + width - client.textRenderer.getWidth(sizeText) - 5,
                     downloadButton.y - client.textRenderer.fontHeight,
                     Colors.GRAY,
                     false
@@ -382,17 +350,17 @@ class PackBrowserListWidget(
                 x + 3,
                 y + 17,
                 downloadButton.x - 3,
-                y + entryHeight,
+                y + height,
                 Colors.GRAY
             )
         }
 
-        override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-            if (!isMouseOver(mouseX, mouseY)) {
+        override fun mouseClicked(click: Click, doubled: Boolean): Boolean {
+            if (!isMouseOver(click.x, click.y)) {
                 return false
             }
 
-            downloadButton.mouseClicked(mouseX, mouseY, button)
+            downloadButton.mouseClicked(click, doubled)
             setSelected(this)
             onSelectPack(musicPack)
 
