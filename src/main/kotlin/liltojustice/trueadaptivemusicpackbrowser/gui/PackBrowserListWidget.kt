@@ -3,7 +3,6 @@ package liltojustice.trueadaptivemusicpackbrowser.gui
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import liltojustice.trueadaptivemusic.Constants
 import liltojustice.trueadaptivemusicpackbrowser.download.DataSizeHelper
 import liltojustice.trueadaptivemusic.Logger
 import liltojustice.trueadaptivemusic.Reference
@@ -11,8 +10,9 @@ import liltojustice.trueadaptivemusic.client.gui.ImageProcessor
 import liltojustice.trueadaptivemusic.client.gui.RenderState
 import liltojustice.trueadaptivemusic.client.gui.text.drawMarqueedWrappedText
 import liltojustice.trueadaptivemusic.client.gui.widget.drawScrollableText
-import liltojustice.trueadaptivemusic.client.gui.widget.utility.DownloadButtonWidget
+import liltojustice.trueadaptivemusicpackbrowser.Constants
 import liltojustice.trueadaptivemusicpackbrowser.download.BrowsableMusicPackDownloader
+import liltojustice.trueadaptivemusicpackbrowser.download.DownloadButtonWidget
 import liltojustice.trueadaptivemusicpackbrowser.pack.BrowsableMusicPack
 import liltojustice.trueadaptivemusicpackbrowser.pack.PackManifest
 import net.minecraft.client.MinecraftClient
@@ -309,8 +309,7 @@ class PackBrowserListWidget(
                 ?.firstOrNull { it.name.contains(musicPack.name) }
                 ?.takeIf { it.toFile().lastModified() < musicPack.lastUpdated.time }
 
-            DownloadButtonWidget(
-                packPath in downloadedPacks, oldPack != null, progress) {
+            DownloadButtonWidget(packPath in downloadedPacks, oldPack != null, progress) {
                 runBlocking {
                     BrowsableMusicPackDownloader.downloadMusicPack(musicPack, progress)
                     oldPack?.let { oldPack.deleteIfExists() }
