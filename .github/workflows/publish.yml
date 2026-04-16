@@ -76,5 +76,5 @@ jobs:
           version-type: release
           changelog-file: CHANGELOG.md
           
-          game-versions: "[${{env.MINECRAFT_VERSION}},1.21.8]"
+          game-versions: "[${{env.MINECRAFT_VERSION}},1.21.10]"
           java: "${{env.JAVA_VERSION}}"
