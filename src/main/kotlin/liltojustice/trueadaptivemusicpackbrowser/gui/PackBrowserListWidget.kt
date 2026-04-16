@@ -15,12 +15,12 @@ import liltojustice.trueadaptivemusicpackbrowser.download.DownloadButtonWidget
 import liltojustice.trueadaptivemusicpackbrowser.pack.BrowsableMusicPack
 import liltojustice.trueadaptivemusicpackbrowser.pack.PackManifest
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen.MENU_BACKGROUND_TEXTURE
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
 import net.minecraft.client.gui.widget.LoadingWidget
 import net.minecraft.client.gui.widget.TextWidget
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
@@ -116,7 +116,7 @@ class PackBrowserListWidget(
 
     override fun renderWidget(context: DrawContext?, mouseX: Int, mouseY: Int, deltaTicks: Float) {
         context?.drawTexture(
-            RenderLayer::getGuiTextured,
+            RenderPipelines.GUI_TEXTURED,
             MENU_BACKGROUND_TEXTURE,
             x,
             y,
@@ -276,7 +276,7 @@ class PackBrowserListWidget(
         }
 
         context?.drawTexture(
-            RenderLayer::getGuiTextured,
+            RenderPipelines.GUI_TEXTURED,
             identifier,
             panelX + 3 + panelWidth / 3 + xOffset,
             imageY + yOffset,
