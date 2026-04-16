@@ -3,18 +3,24 @@ package liltojustice.trueadaptivemusicpackbrowser.gui
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import liltojustice.trueadaptivemusic.Constants
+import liltojustice.trueadaptivemusic.DataSizeHelper
 import liltojustice.trueadaptivemusic.Logger
 import liltojustice.trueadaptivemusic.Reference
-import liltojustice.trueadaptivemusic.client.TAMClient
 import liltojustice.trueadaptivemusic.client.gui.ImageProcessor
 import liltojustice.trueadaptivemusic.client.gui.RenderState
 import liltojustice.trueadaptivemusic.client.gui.text.drawMarqueedWrappedText
+import liltojustice.trueadaptivemusicpackbrowser.download.BrowsableMusicPackDownloader
 import liltojustice.trueadaptivemusicpackbrowser.download.DownloadButtonWidget
+import liltojustice.trueadaptivemusicpackbrowser.pack.BrowsableMusicPack
+import liltojustice.trueadaptivemusicpackbrowser.pack.PackManifest
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.screen.Screen.MENU_BACKGROUND_TEXTURE
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget
+import net.minecraft.client.gui.widget.LoadingWidget
 import net.minecraft.client.gui.widget.TextWidget
-import net.minecraft.client.realms.gui.RealmsLoadingWidget
+import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
@@ -26,6 +32,7 @@ import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.io.extension
 import kotlin.io.path.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
@@ -37,19 +44,19 @@ class PackBrowserListWidget(
     height: Int,
     top: Int,
     itemHeight: Int,
-    private val onSelectPack: (selectedPack: liltojustice.trueadaptivemusic.client.music.pack.browsable.BrowsableMusicPack) -> Unit = {}
+    private val onSelectPack: (selectedPack: BrowsableMusicPack) -> Unit = {}
 ) : AlwaysSelectedEntryListWidget<PackBrowserListWidget.Entry>(client, width, height, top, itemHeight) {
     val refreshTime: Date?
         get() = packManifest?.timestamp
 
-    private var packManifest: liltojustice.trueadaptivemusic.client.music.pack.browsable.PackManifest? = null
+    private var packManifest: PackManifest? = null
     private var renderState = RenderState.Loading
     private val backgroundScope = CoroutineScope(EmptyCoroutineContext)
-    private val loadingWidget = RealmsLoadingWidget(this.client.textRenderer, LOADING_TEXT)
+    private val loadingWidget = LoadingWidget(this.client.textRenderer, LOADING_TEXT)
     private val noPacksFoundWidget = TextWidget(NO_PACKS_TEXT, client.textRenderer)
     private val loadFailureWidget = TextWidget(LOAD_FAILURE_TEXT, client.textRenderer)
     private val downloadedPacks
-        get() = liltojustice.trueadaptivemusic.Constants.MUSIC_PACK_DIR
+        get() = Constants.MUSIC_PACK_DIR
             .toFile().listFiles().filter { it.extension == "zip" }.map { Path(it.path) }
     private val loadedPackImages = mutableSetOf<Identifier>()
 
@@ -63,7 +70,7 @@ class PackBrowserListWidget(
         clearEntries()
         backgroundScope.launch {
             try {
-                packManifest = TAMClient.fetchPacksFromRepository(ignoreCache)
+                packManifest = BrowsableMusicPackDownloader.fetchPacksFromRepository(ignoreCache)
                 initEntries()
 
                 renderState = RenderState.Success
@@ -108,9 +115,18 @@ class PackBrowserListWidget(
     }
 
     override fun renderWidget(context: DrawContext?, mouseX: Int, mouseY: Int, deltaTicks: Float) {
-        context?.setShaderColor(0f, 0f, 0f, 0.5f)
-        context?.fill(x, y, x + this.width, y + this.height, Colors.BLACK)
-        context?.setShaderColor(1f, 1f, 1f, 1f)
+        context?.drawTexture(
+            RenderLayer::getGuiTextured,
+            MENU_BACKGROUND_TEXTURE,
+            x,
+            y,
+            0F,
+            0F,
+            width,
+            height,
+            32,
+            32
+        )
 
         super.renderWidget(context, mouseX, mouseY, deltaTicks)
         if (renderState == RenderState.Loading) {
@@ -145,7 +161,7 @@ class PackBrowserListWidget(
         setSelected(entries?.firstOrNull())
     }
 
-    private fun renderSelectedPack(context: DrawContext?, musicPack: liltojustice.trueadaptivemusic.client.music.pack.browsable.BrowsableMusicPack) {
+    private fun renderSelectedPack(context: DrawContext?, musicPack: BrowsableMusicPack) {
         val panelX = scrollbarX + 9
         val panelWidth = width - panelX
         context?.drawBorder(panelX, y, panelWidth - 1, height, Colors.WHITE)
@@ -196,7 +212,7 @@ class PackBrowserListWidget(
 
         flavorText
             .append(Text.literal("\n\nSize:\n").withColor(Colors.GRAY))
-            .append(Text.literal(liltojustice.trueadaptivemusic.DataSizeHelper.getDataSizeString(musicPack.size)))
+            .append(Text.literal(DataSizeHelper.getDataSizeString(musicPack.size)))
 
         flavorText
             .append(Text.literal("\n\nUpdated:\n").withColor(Colors.GRAY))
@@ -260,6 +276,7 @@ class PackBrowserListWidget(
         }
 
         context?.drawTexture(
+            RenderLayer::getGuiTextured,
             identifier,
             panelX + 3 + panelWidth / 3 + xOffset,
             imageY + yOffset,
@@ -283,7 +300,7 @@ class PackBrowserListWidget(
             "trueadaptivemusic.load_failed", "Failed to Load Packs")
     }
 
-    inner class Entry(val musicPack: liltojustice.trueadaptivemusic.client.music.pack.browsable.BrowsableMusicPack): AlwaysSelectedEntryListWidget.Entry<Entry>() {
+    inner class Entry(val musicPack: BrowsableMusicPack): AlwaysSelectedEntryListWidget.Entry<Entry>() {
         private val progress = Reference(0F)
         private val versionText = Text.literal("Ver ${musicPack.version}").withColor(Colors.GRAY)
         private val packPath = musicPack.getFilePath()
@@ -297,7 +314,7 @@ class PackBrowserListWidget(
             DownloadButtonWidget(
                 packPath in downloadedPacks, oldPack != null, progress) {
                 runBlocking {
-                    liltojustice.trueadaptivemusic.client.music.pack.browsable.BrowsableMusicPackDownloader.downloadMusicPack(musicPack, progress)
+                    BrowsableMusicPackDownloader.downloadMusicPack(musicPack, progress)
                     oldPack?.let { oldPack.deleteIfExists() }
                 }
             }
@@ -332,8 +349,8 @@ class PackBrowserListWidget(
 
             if (downloadButton.downloadStatus == RenderState.Loading) {
                 val currentBytes = (progress.value * musicPack.size).toLong()
-                val currentString = liltojustice.trueadaptivemusic.DataSizeHelper.getDataSizeString(currentBytes)
-                val totalString = liltojustice.trueadaptivemusic.DataSizeHelper.getDataSizeString(musicPack.size)
+                val currentString = DataSizeHelper.getDataSizeString(currentBytes)
+                val totalString = DataSizeHelper.getDataSizeString(musicPack.size)
                 val percentString = String.format("%.1f", currentBytes.toFloat() / musicPack.size * 100) + '%'
                 val progressText = Text.literal("$currentString/$totalString ($percentString)")
                 context.drawText(
@@ -346,7 +363,7 @@ class PackBrowserListWidget(
                 )
             }
             else {
-                val sizeText = Text.literal(liltojustice.trueadaptivemusic.DataSizeHelper.getDataSizeString(musicPack.size))
+                val sizeText = Text.literal(DataSizeHelper.getDataSizeString(musicPack.size))
                 context.drawText(
                     client.textRenderer,
                     sizeText,
