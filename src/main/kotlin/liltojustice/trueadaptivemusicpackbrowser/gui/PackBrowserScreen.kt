@@ -4,6 +4,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import liltojustice.trueadaptivemusic.Constants
 import liltojustice.trueadaptivemusic.client.gui.widget.utility.makeDoneButton
+import liltojustice.trueadaptivemusicpackbrowser.pack.BrowsableMusicPack
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.gui.DrawContext
@@ -25,7 +26,7 @@ class PackBrowserScreen(private val parent: Screen): Screen(
     private lateinit var refreshButton: ButtonWidget
     private lateinit var discordButton: ButtonWidget
     private lateinit var lastRefreshedWidget: TextWidget
-    private var selectedPack: liltojustice.trueadaptivemusic.client.music.pack.browsable.BrowsableMusicPack? = null
+    private var selectedPack: BrowsableMusicPack? = null
 
     override fun init() {
         openMusicPacksButton = ButtonWidget.Builder(OPEN_MUSIC_PACKS_TEXT) {
