@@ -45,8 +45,8 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("kotlin_loader_version")}")
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
-    modImplementation(files("TrueAdaptiveMusic-2.1.1+1.21.9.jar"))
+    implementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
+    implementation(files("TrueAdaptiveMusic-2.1.2+26.1.jar"))
 }
 
 tasks.processResources {
